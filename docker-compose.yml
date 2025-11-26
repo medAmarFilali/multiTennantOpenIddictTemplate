@@ -1,0 +1,65 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: multitenant-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: multitenant
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - multitenant-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  authserver:
+    build:
+      context: .
+      dockerfile: src/AuthServer/AuthServer.API/Dockerfile
+    container_name: multitenant-authserver
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:5001
+      - ConnectionStrings__DefaultConnection=Host=postgres;Database=multitenant;Username=postgres;Password=postgres
+    ports:
+      - "5001:5001"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - multitenant-network
+
+  tenantapi:
+    build:
+      context: .
+      dockerfile: src/TenantApi/TenantApi.API/Dockerfile
+    container_name: multitenant-tenantapi
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:5002
+      - ConnectionStrings__DefaultConnection=Host=postgres;Database=multitenant;Username=postgres;Password=postgres
+      - Authentication__Authority=http://authserver:5001
+    ports:
+      - "5002:5002"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      authserver:
+        condition: service_started
+    networks:
+      - multitenant-network
+
+networks:
+  multitenant-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
