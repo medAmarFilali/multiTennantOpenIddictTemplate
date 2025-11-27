@@ -30,7 +30,7 @@ namespace AuthServer.Domain.Entities;
 /// }
 /// </code>
 /// </remarks>
-public partial class User : BaseEntity, ITenantEntity
+public partial class User : BaseEntity<string>, ITenantEntity
 {
     /// <summary>
     /// The tenant this user belongs to.

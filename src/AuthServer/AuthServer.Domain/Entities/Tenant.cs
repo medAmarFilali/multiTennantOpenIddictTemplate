@@ -27,7 +27,7 @@ namespace AuthServer.Domain.Entities;
 /// </code>
 /// </remarks>
 
-public class Tenant : BaseEntity
+public class Tenant : BaseEntity<string>
 {
     /// <summary>
     /// Unique key identifier for the tenant (e.g. "acme", "contoso").
