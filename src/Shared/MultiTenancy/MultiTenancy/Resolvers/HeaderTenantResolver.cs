@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using System.Net.Http.Headers;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Primitives;
 using MultiTenancy.Abstractions;
 using MultiTenancy.Models;
 
@@ -10,7 +12,7 @@ public class HeaderTenantResolver : ITenantResolver
 
     public Task<TenantContext?> ResolveAsync(HttpContext context)
     {
-        if (context.Request.Headers.TryGetValue(TenantIdHeaderName, out var tenantIdValues))
+        if (!context.Request.Headers.TryGetValue("X-Tenant-Id", out var tenantIdValues))
         {
             return Task.FromResult<TenantContext?>(null);
         }
