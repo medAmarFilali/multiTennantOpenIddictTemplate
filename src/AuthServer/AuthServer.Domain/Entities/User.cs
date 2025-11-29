@@ -66,18 +66,11 @@ public partial class User : BaseEntity<string>, ITenantEntity
     /// Protected constructor for creating a new user.
     /// Derived classes can call this customize initialization.
     /// </summary>
-    /// <param name="id"></param>
-    /// <param name="tenantId"></param>
-    /// <param name="username"></param>
-    /// <param name="email"></param>
-    /// <param name="passwordHash"></param>
-    /// <param name="isActive"></param>
-    /// <param name="createdAt"></param>
-    protected User(string id, string tenantId, string username, string email, string passwordHash)
+    protected User(string id, string tenantId, string userName, string email, string passwordHash)
     {
         Id = id;
         TenantId = tenantId;
-        UserName = username;
+        UserName = userName;
         Email = email;
         PasswordHash = passwordHash;
         IsActive = true;
