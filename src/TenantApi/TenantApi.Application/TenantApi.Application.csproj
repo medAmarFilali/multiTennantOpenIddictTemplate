@@ -1,6 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
+    <ProjectReference Include="..\..\..\tests\AuthServer.UnitTests\AuthServer.UnitTests.csproj" />
     <ProjectReference Include="..\TenantApi.Domain\TenantApi.Domain.csproj" />
     <ProjectReference Include="..\..\Shared\MultiTenancy\MultiTenancy\MultiTenancy.csproj" />
   </ItemGroup>

@@ -37,6 +37,7 @@ public class AuthServerDbContextTests
     public async Task Users_ShouldBeFilteredByTenant_WhenTenantContextIsSet()
     {
         // Arrange
+        await _fixture.CleanDatabaseAsync();
         var tenantAccessor = new TestTenantAccessor
         {
             TenantContext = new TenantContext { TenantId = "tenant-1", TenantKey = "acme" }
@@ -69,6 +70,7 @@ public class AuthServerDbContextTests
     public async Task Users_ShouldReturnAllUsers_WhenTenantContextIsNull()
     {
         // Arrange
+        await _fixture.CleanDatabaseAsync();
         var context = CreateContext(null);
 
         // Create users for different tenants
@@ -92,6 +94,7 @@ public class AuthServerDbContextTests
     public async Task Users_ShouldReturnDifferentUsers_WhenTenantContextChanges()
     {
         // Arrange
+        await _fixture.CleanDatabaseAsync();
         var setupContext = CreateContext();
         var user1 = DomainUser.Create("user-1", "tenant-1", "john.doe", "john@acme.com", "hash1");
         var user2 = DomainUser.Create("user-2", "tenant-2", "jane.doe", "jane@contoso.com", "hash2");
@@ -151,6 +154,7 @@ public class AuthServerDbContextTests
     [Fact]
     public async Task SaveChangesAsync_ShouldNotOverrideTenantId_WhenModifyingUser()
     {
+        await _fixture.CleanDatabaseAsync();
         var tenantAccessor = new TestTenantAccessor
         {
             TenantContext = new TenantContext { TenantId = "tenant-1", TenantKey = "acme"}
@@ -205,6 +209,7 @@ public class AuthServerDbContextTests
     public async Task Users_CanBeQueriedIgnoringQueryFilters()
     {
         // Arrange
+        await _fixture.CleanDatabaseAsync();
         var tenantAccessor = new TestTenantAccessor
         {
             TenantContext = new TenantContext { TenantId = "tenant-1", TenantKey = "acme" }

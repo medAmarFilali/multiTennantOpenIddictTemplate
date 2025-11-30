@@ -36,5 +36,53 @@ public class PostgresFixture : IAsyncLifetime
         context.Database.EnsureCreated();
     }
 
-    public Task DisposeAsync() => _container.DisposeAsync().AsTask();
+    /// <summary>
+    /// Cleans all data from test tables while preserving schema.
+    /// Call this at the start of each test to ensure clean state.
+    /// </summary>
+    public async Task CleanDatabaseAsync()
+    {
+        var options = new DbContextOptionsBuilder<AuthServerDbContext>()
+            .UseNpgsql(ConnectionString)
+            .EnableServiceProviderCaching(false)
+            .Options;
+
+        // Use accessor with null context to bypass tenant filtering
+        var noTenantAccessor = new TenantAccessor { TenantContext = null };
+        using var context = new AuthServerDbContext(options, noTenantAccessor);
+
+        // Use reflection to find all DBSet properties and clear them
+        var dbSetProperties = context.GetType()
+            .GetProperties()
+            .Where(p => p.PropertyType.IsGenericType && p.PropertyType.GetGenericTypeDefinition() == typeof(DbSet<>));
+
+        foreach (var property in dbSetProperties)
+        {
+            var dbSet = property.GetValue(context);
+            if (dbSet == null) continue;
+
+            // Get the entity type
+            var entityType = property.PropertyType.GetGenericArguments()[0];
+
+            // Call Set<T>().IgnoreQueryFilters() dynamically
+            var setMethod = context.GetType().GetMethod(nameof(context.Set), Type.EmptyTypes)!
+                .MakeGenericMethod(entityType);
+            var set = setMethod.Invoke(context, null);
+
+            // Call IgnoreFilters()
+            var ignoreFiltersMethod = typeof(EntityFrameworkQueryableExtensions)
+                .GetMethod(nameof(EntityFrameworkQueryableExtensions.IgnoreQueryFilters))!
+                .MakeGenericMethod(entityType);
+            var filteredSet = ignoreFiltersMethod.Invoke(context, new[] { set });
+
+            // Call RemoveRange()
+            var removeRangeMethod = context.GetType()
+                .GetMethod(nameof(context.RemoveRange), new[] { typeof(IEnumerable<object>) });
+            removeRangeMethod.Invoke(context, new[] { filteredSet });
+        }
+
+        await context.SaveChangesAsync();
+    }
+
+    public Task DisposeAsync() => _container?.DisposeAsync().AsTask() ?? Task.CompletedTask;
 }
